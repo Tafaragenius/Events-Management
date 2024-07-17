@@ -137,3 +137,9 @@ USE_TZ = True
 DATETIME_INPUT_FORMATS = [
     '%Y-%m-%dT%H:%M',  # '2024-07-10T14:30'
 ]
+
+
+LOGIN_URL = '/login/'  # Adjust this if your login URL is different
+# settings.py
+
+AUTH_USER_MODEL = 'website.CustomUser'

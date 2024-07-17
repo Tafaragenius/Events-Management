@@ -1,37 +1,40 @@
 # forms.py
 
 from django import forms
-from .models import Register, Login, Event
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from .models import CustomUser, Event
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Submit
 
-class RegisterForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput(), label='Password')
-    confirm_password = forms.CharField(widget=forms.PasswordInput(), label='Confirm Password')
+class RegisterForm(UserCreationForm):
+    email = forms.EmailField(required=True)
 
     class Meta:
-        model = Register
-        fields = ['username', 'first_name', 'surname', 'email', 'password', 'confirm_password']
-    
-    def clean(self):
-        cleaned_data = super().clean()
-        password = cleaned_data.get('password')
-        confirm_password = cleaned_data.get('confirm_password')
+        model = CustomUser
+        fields = ('email', 'first_name', 'surname', 'password1', 'password2')
 
-        if password and confirm_password and password != confirm_password:
-            raise forms.ValidationError("Passwords do not match")
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data['email']
+        user.first_name = self.cleaned_data['first_name']
+        user.surname = self.cleaned_data['surname']
+        if commit:
+            user.save()
+        return user
 
-class LoginForm(forms.ModelForm):
-    class Meta:
-        model = Login
-        fields = ['username', 'password']
-        widgets = {
-            'password': forms.PasswordInput(),
-        }
+class LoginForm(AuthenticationForm):
+    username = forms.EmailField(label="Email", max_length=254)
 
 class EventForm(forms.ModelForm):
     class Meta:
         model = Event
-        fields = ['title', 'description', 'start_time', 'finish_time']
+        fields = ['title', 'description', 'start_time', 'finish_time', 'venue']
         widgets = {
             'start_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
             'finish_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super(EventForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.add_input(Submit('submit', 'Save Event'))
